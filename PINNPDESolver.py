@@ -450,7 +450,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
     def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
         self.changed = False
         self.lambd_list = []
-        super().solve_with_TFoptimizer(self, optim_fwd, X, u, **kwargs)
+        super().solve_with_TFoptimizer(optim_fwd, X, u, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
