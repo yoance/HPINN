@@ -528,18 +528,16 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                     print ('Timeout is reached. Time elapsed: {} seconds'.format(time.time()-t0))
                     break
             
-    def solve_with_ScipyOptimizer(self, X, u, method='L-BFGS-B', min_loss=None, timeout=None, **kwargs):        
+    def solve_with_ScipyOptimizer(self, X, u, method_fwd='L-BFGS-B', method_param='L-BFGS-B', N_param=None, min_loss_param=None, timeout_param=None, min_loss=None, timeout=None, **kwargs):
         """This method provides an interface to solve the learning problem
         using a routine from scipy.optimize.minimize.
         (Tensorflow 1.xx had an interface implemented, which is not longer
         supported in Tensorflow 2.xx.)
         Type conversion is necessary since scipy-routines are written in Fortran
         which requires 64-bit floats instead of 32-bit floats."""
-        def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
-        
         self.changed = False
         self.lambd_list = []
-        super().solve_with_TFoptimizer(optim_fwd, X, u, **kwargs)
+        super().solve_with_ScipyOptimizer(X, u, method_fwd, min_loss=min_loss, timeout=timeout, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
@@ -548,45 +546,15 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
 
         print('\n\nFinding PDE parameters.')
         
-        def get_weight_tensor():
-            """Function to return current variables of the model
-            as 1d tensor as well as corresponding shapes as lists."""
-            
-            weight_list = []
-            shape_list = []
-            
-            # Loop over all variables, i.e. weight matrices, bias vectors and unknown parameters
-            for v in self.model.variables:
-                shape_list.append(v.shape)
-                weight_list.extend(v.numpy().flatten())
-                
-            weight_list = tf.convert_to_tensor(weight_list)
-            return weight_list, shape_list
-
-        x0, shape_list = get_weight_tensor()
+        x0 = tf.convert_to_tensor([self.model.lambd])
         
         def set_weight_tensor(weight_list):
             """Function which sets list of weights
             to variables in the model."""
             idx = 0
-            for v in self.model.variables:
-                vs = v.shape
-                
-                # Weight matrices
-                if len(vs) == 2:  
-                    sw = vs[0]*vs[1]
-                    new_val = tf.reshape(weight_list[idx:idx+sw],(vs[0],vs[1]))
-                    idx += sw
-                
-                # Bias vectors
-                elif len(vs) == 1:
-                    new_val = weight_list[idx:idx+vs[0]]
-                    idx += vs[0]
-                    
-                # Variables (in case of parameter identification setting)
-                elif len(vs) == 0:
-                    new_val = weight_list[idx]
-                    idx += 1
+            for v in self.model.lambd:
+                new_val = weight_list[idx]
+                idx += 1
                     
                 # Assign variables (Casting necessary since scipy requires float64 type)
                 v.assign(tf.cast(new_val, DTYPE))
@@ -618,7 +586,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
             # Return value and gradient of \phi as tuple
             return loss, grad_flat
         
-        if min_loss is not None:            
+        if min_loss_param is not None:            
             
             self.current_loss = None
             class TimedFun:
@@ -658,7 +626,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
             return res
         
         
-        elif timeout is not None:            
+        elif timeout_param is not None:            
             """Class to stop scipy minimize learning when 
             certain timeout is reached (if set).
             
