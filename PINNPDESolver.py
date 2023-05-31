@@ -489,7 +489,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                 return loss
 
             def loss_callback():
-                optim_param.minimize(loss_fn_param, self.model.lambd)
+                optim_param.minimize(loss_fn_param, [self.model.lambd])
                 callback()
         
 
@@ -535,6 +535,18 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
         supported in Tensorflow 2.xx.)
         Type conversion is necessary since scipy-routines are written in Fortran
         which requires 64-bit floats instead of 32-bit floats."""
+        def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
+        
+        self.changed = False
+        self.lambd_list = []
+        super().solve_with_TFoptimizer(optim_fwd, X, u, **kwargs)
+        
+        # Add parameters after fitting 
+        # with given data.
+        self.model.add_param()
+        self.changed = True
+
+        print('\n\nFinding PDE parameters.')
         
         def get_weight_tensor():
             """Function to return current variables of the model
