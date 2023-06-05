@@ -615,7 +615,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                                               x0=x0,
                                               args=(self),
                                               jac=True,
-                                              method=method,
+                                              method=method_param,
                                               callback=self.callback,
                                               **kwargs)
             except Exception as e:
@@ -655,7 +655,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                 res = scipy.optimize.minimize(fun=get_loss_and_grad_timed.fun,
                                               x0=x0,
                                               jac=True,
-                                              method=method,
+                                              method=method_param,
                                               callback=self.callback,
                                               **kwargs)
             except Exception as e:
@@ -669,7 +669,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
         return scipy.optimize.minimize(fun=get_loss_and_grad,
                                        x0=x0,
                                        jac=True,
-                                       method=method,
+                                       method=method_param,
                                        callback=self.callback,
                                        **kwargs)
     
