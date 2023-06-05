@@ -447,10 +447,12 @@ class Hybrid_IdentificationNet(PINN_NeuralNet):
 
 
 class Hybrid_IdentificationSolver(PINN_PDESolver):
-    def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
+    def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, 
+                               N_fwd=None, min_loss_fwd=None, timeout_fwd=None, 
+                               N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
         self.changed = False
         self.lambd_list = []
-        super().solve_with_TFoptimizer(optim_fwd, X, u, **kwargs)
+        super().solve_with_TFoptimizer(optim_fwd, X, u, N=N_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
@@ -528,7 +530,9 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                     print ('Timeout is reached. Time elapsed: {} seconds'.format(time.time()-t0))
                     break
             
-    def solve_with_ScipyOptimizer(self, X, u, method_fwd='L-BFGS-B', method_param='L-BFGS-B', min_loss=None, timeout=None, min_loss_param=None, timeout_param=None, **kwargs):
+    def solve_with_ScipyOptimizer(self, X, u, method_fwd='L-BFGS-B', method_param='L-BFGS-B', 
+                                  min_loss_fwd=None, timeout_fwd=None, 
+                                  min_loss_param=None, timeout_param=None, **kwargs):
         """This method provides an interface to solve the learning problem
         using a routine from scipy.optimize.minimize.
         (Tensorflow 1.xx had an interface implemented, which is not longer
@@ -537,7 +541,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
         which requires 64-bit floats instead of 32-bit floats."""
         self.changed = False
         self.lambd_list = []
-        super().solve_with_ScipyOptimizer(X, u, method_fwd, min_loss=min_loss, timeout=timeout, **kwargs)
+        super().solve_with_ScipyOptimizer(X, u, method_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
