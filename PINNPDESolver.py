@@ -91,7 +91,7 @@ class PINN_PDESolver():
         
         return loss, phi_r, g
     
-    def solve_with_TFoptimizer(self, optimizer, X, u, 
+    def solve_with_TFOptimizer(self, optimizer, X, u, 
                                N=None, min_loss=None, timeout=None):
         """This method performs a gradient descent type optimization.
         Takes one stopping criterion: N number of iterations, 
@@ -447,12 +447,12 @@ class Hybrid_IdentificationNet(PINN_NeuralNet):
 
 
 class Hybrid_IdentificationSolver(PINN_PDESolver):
-    def solve_with_TFoptimizer(self, optim_fwd, optim_param, get_r_param, X, u, 
+    def solve_with_TFOptimizer(self, optim_fwd, optim_param, get_r_param, X, u, 
                                N_fwd=None, min_loss_fwd=None, timeout_fwd=None, 
                                N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):
         self.changed = False
         self.lambd_list = []
-        super().solve_with_TFoptimizer(optim_fwd, X, u, N=N_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
+        super().solve_with_TFOptimizer(optim_fwd, X, u, N=N_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
@@ -541,7 +541,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
         which requires 64-bit floats instead of 32-bit floats."""
         self.changed = False
         self.lambd_list = []
-        super().solve_with_ScipyOptimizer(X, u, method_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
+        super().solve_with_ScipyOptimizer(X, u, method=method_fwd, min_loss=min_loss_fwd, timeout=timeout_fwd, **kwargs)
         
         # Add parameters after fitting 
         # with given data.
