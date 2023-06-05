@@ -528,7 +528,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                     print ('Timeout is reached. Time elapsed: {} seconds'.format(time.time()-t0))
                     break
             
-    def solve_with_ScipyOptimizer(self, X, u, method_fwd='L-BFGS-B', method_param='L-BFGS-B', N_param=None, min_loss_param=None, timeout_param=None, min_loss=None, timeout=None, **kwargs):
+    def solve_with_ScipyOptimizer(self, X, u, method_fwd='L-BFGS-B', method_param='L-BFGS-B', min_loss=None, timeout=None, min_loss_param=None, timeout_param=None, **kwargs):
         """This method provides an interface to solve the learning problem
         using a routine from scipy.optimize.minimize.
         (Tensorflow 1.xx had an interface implemented, which is not longer
@@ -607,7 +607,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                     self.x = x
                     return self.fun_value
 
-            get_loss_and_grad_timed = TimedFun(fun=get_loss_and_grad, stop_after=min_loss)
+            get_loss_and_grad_timed = TimedFun(fun=get_loss_and_grad, stop_after=min_loss_param)
             res = None
             
             try:
@@ -648,7 +648,7 @@ class Hybrid_IdentificationSolver(PINN_PDESolver):
                     self.x = x
                     return self.fun_value
 
-            get_loss_and_grad_timed = TimedFun(fun=get_loss_and_grad, stop_after=timeout)
+            get_loss_and_grad_timed = TimedFun(fun=get_loss_and_grad, stop_after=timeout_param)
             res = None
             
             try:
