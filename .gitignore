@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Model artifacts
+*.h5
+model weights/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
