@@ -1,8 +1,7 @@
 # H-PINN — Hadamard Physics-Informed Neural Networks
 
 Physics-Informed Neural Networks (PINNs) for solving partial differential
-equations and identifying their parameters, with a FastAPI backend and an
-interactive web playground.
+equations and identifying their parameters.
 
 This is the code accompanying the published paper:
 
