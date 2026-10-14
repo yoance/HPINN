@@ -40,8 +40,9 @@ Both support two modes:
 ├── src/hpinn/            Core library
 │   ├── pinn_pde_solver.py   PINN models & solvers (TF/Keras 2 API)
 │   ├── problems.py          Heat & KdV problem definitions
-│   └── combined_decay.py    CombinedDecay learning-rate schedule
-└── notebooks/            Colab notebooks — proof-of-concept
+│   └── schedulers/          CombinedDecay learning-rate schedule
+├── notebooks/            Colab notebooks — proof-of-concept
+└── playground/           Interactive web demo (see playground/README.md)
 ```
 
 
@@ -60,6 +61,20 @@ pip install "git+https://github.com/yoance/HPINN.git"
 import hpinn
 print(hpinn.__version__)
 ```
+
+**For development** — the repository is managed with
+[uv](https://docs.astral.sh/uv/). Clone it and sync the environment (Python
+version from `.python-version`, dependencies pinned in `uv.lock`):
+
+```bash
+git clone https://github.com/yoance/HPINN.git
+cd HPINN
+uv sync
+```
+
+Add `--extra notebooks` for the Jupyter notebooks. The web playground has
+its own dependency group and setup — see
+[`playground/README.md`](playground/README.md).
 
 
 ## Citation
