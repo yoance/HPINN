@@ -37,16 +37,16 @@ app.add_middleware(
 MAX_HISTORY_POINTS = 400
 
 
-def _decimate(seq, max_points=MAX_HISTORY_POINTS):
-    """Downsample a history list for transport, always keeping the last point."""
-    n = len(seq)
+def _decimate_indices(n, max_points=MAX_HISTORY_POINTS):
+    """Indices that downsample a history of length ``n`` for transport,
+    always keeping the last point."""
     if n <= max_points:
-        return list(seq)
+        return list(range(n))
     step = n / max_points
     idx = [int(i * step) for i in range(max_points)]
     if idx[-1] != n - 1:
         idx.append(n - 1)
-    return [seq[i] for i in idx]
+    return idx
 
 
 @app.get("/api/problems", response_model=list[schemas.ProblemInfo])
@@ -79,6 +79,8 @@ def job_status(job_id: str):
     job = manager.get(job_id)
     if job is None:
         raise HTTPException(404, "Job not found")
+    loss_idx = _decimate_indices(len(job.loss_history))
+    lambda_idx = _decimate_indices(len(job.lambda_history))
     return schemas.JobStatus(
         job_id=job.job_id,
         status=job.status,
@@ -86,8 +88,10 @@ def job_status(job_id: str):
         progress=schemas.JobProgress(
             iteration=job.iteration,
             total=job.request.total_epochs,
-            loss_history=_decimate(job.loss_history),
-            lambda_history=_decimate(job.lambda_history),
+            loss_history=[job.loss_history[i] for i in loss_idx],
+            loss_iterations=loss_idx,  # one loss per optimizer step
+            lambda_history=[job.lambda_history[i] for i in lambda_idx],
+            lambda_iterations=[job.lambda_iterations[i] for i in lambda_idx],
         ),
         error=job.error,
         result=job.result,

@@ -2,12 +2,16 @@
 
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class TrainRequest(BaseModel):
     problem: Literal["heat", "kdv"] = "heat"
-    mode: Literal["forward", "inverse", "hadamard"] = "forward"
+    mode: Literal["forward", "inverse"] = "forward"
+    # Inverse mode only: "pinn" fits the network and λ jointly; "hpinn"
+    # (Hadamard-PINN) first fits the network to the data for ``epochs``, then
+    # searches λ for ``param_epochs`` with the fitted network held fixed.
+    method: Literal["pinn", "hpinn"] = "pinn"
 
     # Network architecture
     num_hidden_layers: int = Field(2, ge=1, le=8)
@@ -15,37 +19,60 @@ class TrainRequest(BaseModel):
 
     # Training
     epochs: int = Field(2000, ge=10, le=20000)
-    learning_rate: float = Field(1e-2, gt=0, le=1.0)
+    param_epochs: int = Field(1000, ge=10, le=20000,
+                              description="λ-search epochs (hpinn method)")
     seed: int = 0
+
+    # Learning-rate schedule (each optimizer starts its own schedule, so with
+    # hpinn the schedule restarts for the λ-search phase)
+    learning_rate: float = Field(1e-2, gt=0, le=1.0,
+                                 description="Initial learning rate")
+    lr_schedule: Literal["constant", "exponential", "combined"] = "exponential"
+    decay_steps: int = Field(1000, ge=1, le=100000,
+                             description="Exponential decay: lr · rate^(step / decay_steps)")
+    decay_rate: float = Field(0.9, gt=0, le=1.0)
+    boundaries: List[int] = Field(
+        [1000, 1500], min_length=1, max_length=10,
+        description="CombinedDecay: steps where the exponential decay hands "
+                    "over to piecewise-constant values")
+    values_steps: float = Field(
+        2.0, ge=1.0, le=100.0,
+        description="CombinedDecay: divide the learning rate by this at each boundary")
 
     # Forward problem data sizes
     n_initial: int = Field(50, ge=10, le=2000, description="N_0 initial condition points")
     n_boundary: int = Field(50, ge=10, le=2000, description="N_b boundary points")
     n_collocation: int = Field(1000, ge=100, le=20000, description="N_r collocation points")
 
-    # Inverse problem settings (inverse and hadamard modes)
+    # Inverse problem settings
     n_data: int = Field(500, ge=50, le=5000, description="N_d measurement points")
     noise: float = Field(0.0, ge=0.0, le=1.0)
     initial_lambda: Optional[List[float]] = Field(
         None, description="Initial guess for the PDE parameters")
 
-    # Hadamard mode: ``epochs`` fits the network to the data, then
-    # ``param_epochs`` searches the PDE parameters with the network held fixed.
-    param_epochs: int = Field(1000, ge=10, le=20000,
-                              description="Parameter-search epochs (hadamard mode)")
+    @field_validator("boundaries")
+    @classmethod
+    def _increasing(cls, v):
+        if v[0] < 1 or any(b <= a for a, b in zip(v, v[1:])):
+            raise ValueError("boundaries must be positive and strictly increasing")
+        return v
+
+    @property
+    def is_hpinn(self) -> bool:
+        return self.mode == "inverse" and self.method == "hpinn"
 
     @property
     def total_epochs(self) -> int:
-        if self.mode == "hadamard":
-            return self.epochs + self.param_epochs
-        return self.epochs
+        return self.epochs + (self.param_epochs if self.is_hpinn else 0)
 
 
 class JobProgress(BaseModel):
     iteration: int = 0
     total: int
     loss_history: List[float] = []
+    loss_iterations: List[int] = []    # iteration of each loss_history point
     lambda_history: List[List[float]] = []
+    lambda_iterations: List[int] = []  # iteration of each lambda_history point
 
 
 class SolutionGrid(BaseModel):

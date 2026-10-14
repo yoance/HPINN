@@ -22,6 +22,7 @@ from hpinn import (
     PINN_IdentificationSolver,
     Hadamard_IdentificationNet,
     Hadamard_IdentificationSolver,
+    CombinedDecay,
     generate_training_data,
     generate_collocation_points,
     generate_training_data_inverse,
@@ -132,6 +133,22 @@ def _predict_grid(model, problem, nt=GRID_NT, nx=GRID_NX):
     return tspace, xspace, u_pred, u_exact
 
 
+def make_lr_schedule(request):
+    """Learning rate (schedule) selected by ``request.lr_schedule``."""
+    if request.lr_schedule == "constant":
+        return request.learning_rate
+    if request.lr_schedule == "exponential":
+        return tf.keras.optimizers.schedules.ExponentialDecay(
+            request.learning_rate, decay_steps=request.decay_steps,
+            decay_rate=request.decay_rate)
+    return CombinedDecay(
+        boundaries=request.boundaries,
+        initial_learning_rate=request.learning_rate,
+        decay_steps=request.decay_steps,
+        decay_rate=request.decay_rate,
+        values_steps=request.values_steps)
+
+
 def _relative_l2_error(u_pred, u_exact):
     diff = (u_exact - u_pred).ravel()
     return float(np.linalg.norm(diff) / np.linalg.norm(u_exact.ravel()) * 100)
@@ -185,7 +202,7 @@ def run_training(request, on_iteration, cancel_event):
                 f"value(s) for problem '{problem.key}'")
         initial_lambda = np.array(initial_lambda, dtype=DTYPE)
 
-        if request.mode == "inverse":
+        if not request.is_hpinn:
             model = PINN_IdentificationNet(
                 initial_lambda=initial_lambda, lb=lb, ub=ub, **arch)
             solver_cls = MonitoredIdentificationSolver
@@ -204,11 +221,9 @@ def run_training(request, on_iteration, cancel_event):
     solver.attach_monitor(on_iteration, cancel_event)
 
     def make_optimizer():
-        lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-            request.learning_rate, decay_steps=1000, decay_rate=0.9)
-        return tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+        return tf.keras.optimizers.Adam(learning_rate=make_lr_schedule(request))
 
-    if request.mode == "hadamard":
+    if request.is_hpinn:
         solver.solve_with_TFOptimizer(
             make_optimizer(), make_optimizer(), solver.make_get_r_param(),
             X_data, u_data, N_fwd=request.epochs,

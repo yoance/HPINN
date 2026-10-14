@@ -41,13 +41,39 @@ uv run uvicorn backend.app.main:app --reload
 Then open http://localhost:8000/ for the playground and
 http://localhost:8000/docs for the interactive API docs.
 
-## Modes
+## Modes and methods
 
-| Mode | Solver | What it does |
+| `mode` | `method` | Solver | What it does |
+|---|---|---|---|
+| `forward` | — | `PINN_PDESolver` | Learns u(t, x) from the PDE residual plus initial/boundary conditions. |
+| `inverse` | `pinn` | `PINN_IdentificationSolver` | Fits measurements of u and the PDE parameters λ jointly. |
+| `inverse` | `hpinn` | `Hadamard_IdentificationSolver` | H-PINN: first fits the network to the measurements only (`epochs`), then searches λ with the fitted network held fixed (`param_epochs`). |
+
+## Learning-rate schedulers
+
+Set with `lr_schedule`, starting from `learning_rate`:
+
+| `lr_schedule` | Schedule | Parameters |
 |---|---|---|
-| `forward` | `PINN_PDESolver` | Learns u(t, x) from the PDE residual plus initial/boundary conditions. |
-| `inverse` | `PINN_IdentificationSolver` | Fits measurements of u and the PDE parameters λ jointly. |
-| `hadamard` | `Hadamard_IdentificationSolver` | H-PINN: first fits the network to the measurements only (`epochs`), then searches λ with the fitted network held fixed (`param_epochs`). |
+| `constant` | The rate stays at `learning_rate`. | — |
+| `exponential` | Keras `ExponentialDecay`: `learning_rate · decay_rate^(step / decay_steps)` | `decay_steps`, `decay_rate` |
+| `combined` | `hpinn.CombinedDecay`: exponential decay until `boundaries[0]`, then the rate is divided by `values_steps` at every boundary. | `decay_steps`, `decay_rate`, `boundaries`, `values_steps` |
+
+Each optimizer runs its own schedule, so with H-PINN the schedule restarts
+at the start of the λ-search phase. The UI previews the schedule as you edit
+it, and can load the settings used in the notebooks.
+
+## Comparing runs
+
+The UI's **Compare** option trains several jobs on the same data, seed and
+initial λ, then shows them together: a comparison table, overlaid loss and λ
+curves, and solution heatmaps on shared colour scales.
+
+- **PINN vs H-PINN** (inverse mode): one run per method.
+- **Constant vs exponential vs CombinedDecay**: one run per scheduler.
+
+Each run is an ordinary job (`POST /api/train`), so you can compare
+anything else the same way through the API.
 
 ## API
 
@@ -55,7 +81,7 @@ http://localhost:8000/docs for the interactive API docs.
 |---|---|---|
 | `GET` | `/api/problems` | Available problems, domains and true λ. |
 | `POST` | `/api/train` | Start a training job; returns its `job_id`. |
-| `GET` | `/api/train/{job_id}` | Job status, progress (loss/λ history) and result. |
+| `GET` | `/api/train/{job_id}` | Job status, progress (loss/λ history with the iteration of each point) and result. |
 | `DELETE` | `/api/train/{job_id}` | Cancel a queued or running job. |
 
 Jobs run one at a time on a background thread and are kept in memory, so

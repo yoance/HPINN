@@ -22,6 +22,7 @@ class Job:
     iteration: int = 0
     loss_history: List[float] = field(default_factory=list)
     lambda_history: List[List[float]] = field(default_factory=list)
+    lambda_iterations: List[int] = field(default_factory=list)
     result: Optional[dict] = None
     error: Optional[str] = None
     cancel_event: threading.Event = field(default_factory=threading.Event)
@@ -60,6 +61,8 @@ class JobManager:
             job.iteration = iteration
             job.loss_history.append(loss)
             if lambd is not None:
+                # iterations first: the API indexes them by len(lambda_history)
+                job.lambda_iterations.append(iteration)
                 job.lambda_history.append(lambd)
 
         try:
