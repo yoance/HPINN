@@ -11,7 +11,7 @@ requires-python = ">=3.10"
 dependencies = [
     "numpy",
     "scipy",
-    "tensorflow-cpu>=2.15",
+    "tensorflow>=2.15",
     "tf-keras",
     "matplotlib",
 ]
