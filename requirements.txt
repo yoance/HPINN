@@ -1,0 +1,5 @@
+numpy
+scipy
+matplotlib
+tensorflow-cpu>=2.15
+tf-keras

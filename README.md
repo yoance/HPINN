@@ -42,14 +42,8 @@ Both support two modes:
 ├── src/hpinn/            Core library
 │   ├── pinn_pde_solver.py   PINN models & solvers (TF/Keras 2 API)
 │   ├── problems.py          Heat & KdV problem definitions
-│   └── schedules.py         CombinedDecay learning-rate schedule
-├── backend/app/          FastAPI service
-│   ├── main.py              API routes + static frontend hosting
-│   ├── training.py          Training service (progress, cancellation)
-│   ├── jobs.py              In-memory background job manager
-│   └── schemas.py           Pydantic request/response models
-├── frontend/             Web playground (vanilla HTML/CSS/JS)
-└── notebooks/            Colab notebooks — proof-of-concept & testing only
+│   └── combined_decay.py    CombinedDecay learning-rate schedule
+└── notebooks/            Colab notebooks — proof-of-concept
 ```
 
 

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hpinn"
+version = "0.1.0"
+description = "Hybrid Physics-Informed Neural Networks for solving PDEs (heat, KdV) with a FastAPI backend and web demo"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+    "tensorflow-cpu>=2.15",
+    "tf-keras",
+    "matplotlib",
+]
+
+[project.optional-dependencies]
+backend = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
+]
+notebooks = [
+    "jupyter",
+    "pandas",
+    "tabulate",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
