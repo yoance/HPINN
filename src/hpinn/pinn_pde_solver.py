@@ -423,7 +423,7 @@ class PINN_IdentificationSolver(PINN_PDESolver):
         return (ax1,ax2)
 
 
-class Hybrid_IdentificationNet(PINN_NeuralNet):
+class Hadamard_IdentificationNet(PINN_NeuralNet):
     def __init__(self, initial_lambda, *args, **kwargs):        
         # Call init of base class
         super().__init__(*args,**kwargs)
@@ -446,7 +446,7 @@ class Hybrid_IdentificationNet(PINN_NeuralNet):
 
 
 
-class Hybrid_IdentificationSolver(PINN_PDESolver):
+class Hadamard_IdentificationSolver(PINN_PDESolver):
     def solve_with_TFOptimizer(self, optim_fwd, optim_param, get_r_param, X, u, 
                                N_fwd=None, min_loss_fwd=None, timeout_fwd=None, 
                                N_param=None, min_loss_param=None, timeout_param=None, modified=False, **kwargs):

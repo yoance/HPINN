@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hpinn"
 version = "0.1.0"
-description = "Hybrid Physics-Informed Neural Networks for solving PDEs (heat, KdV) with a FastAPI backend and web demo"
+description = "Hadamard Physics-Informed Neural Networks for solving PDEs (heat, KdV) with a FastAPI backend and web demo"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [

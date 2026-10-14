@@ -12,14 +12,13 @@ This is the code accompanying the published paper:
 > [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2666657X25000023) ·
 > [doi:10.1016/j.exco.2025.100175](https://doi.org/10.1016/j.exco.2025.100175)
 
-H-PINN (Hadamard-PINN, called the *hybrid* PINN in earlier drafts and in the
-code) applies Hadamard's conditions for well-posed problems to the PDE
+H-PINN (Hadamard-PINN) applies Hadamard's conditions for well-posed problems to the PDE
 inverse problem: training is split into two phases — first the network is
 fitted to the observed data alone, then the PDE parameters λ are searched
 while the fitted solution is held as the anchor. This makes parameter
 identification converge even from initial guesses far from the true values.
-The method is implemented in `Hybrid_IdentificationNet` /
-`Hybrid_IdentificationSolver` in `src/hpinn/pinn_pde_solver.py`, alongside
+The method is implemented in `Hadamard_IdentificationNet` /
+`Hadamard_IdentificationSolver` in `src/hpinn/pinn_pde_solver.py`, alongside
 the standard PINN forward solver and joint inverse solver.
 
 Supported problems:

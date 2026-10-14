@@ -1,4 +1,4 @@
-"""H-PINN: (Hybrid) Physics-Informed Neural Networks for solving PDEs.
+"""H-PINN: (Hadamard) Physics-Informed Neural Networks for solving PDEs.
 
 Core library containing the PINN models, solvers, learning-rate schedules
 and the predefined PDE problems (heat equation, KdV equation).
@@ -23,8 +23,8 @@ from .pinn_pde_solver import (
     PINN_PDESolver,
     PINN_IdentificationNet,
     PINN_IdentificationSolver,
-    Hybrid_IdentificationNet,
-    Hybrid_IdentificationSolver,
+    Hadamard_IdentificationNet,
+    Hadamard_IdentificationSolver,
     generate_training_data,
     generate_collocation_points,
     generate_training_data_inverse,
@@ -42,8 +42,8 @@ __all__ = [
     "PINN_PDESolver",
     "PINN_IdentificationNet",
     "PINN_IdentificationSolver",
-    "Hybrid_IdentificationNet",
-    "Hybrid_IdentificationSolver",
+    "Hadamard_IdentificationNet",
+    "Hadamard_IdentificationSolver",
     "generate_training_data",
     "generate_collocation_points",
     "generate_training_data_inverse",
