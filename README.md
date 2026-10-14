@@ -46,6 +46,23 @@ Both support two modes:
 ```
 
 
+## Installation
+
+Python 3.10+.
+
+**As a library** — install straight from GitHub and `import hpinn` in your
+own projects:
+
+```bash
+pip install "git+https://github.com/yoance/HPINN.git"
+```
+
+```python
+import hpinn
+print(hpinn.__version__)
+```
+
+
 ## Citation
 
 If you use this code or the H-PINN method in your research, please cite:
