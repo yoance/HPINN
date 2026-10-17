@@ -1,9 +1,9 @@
-# H-PINN — Hadamard Physics-Informed Neural Networks
+# H-PINN: Hadamard Physics-Informed Neural Networks
 
-Physics-Informed Neural Networks (PINNs) for solving partial differential
+Physics-informed neural networks (PINNs) for solving partial differential
 equations and identifying their parameters.
 
-This is the code accompanying the published paper:
+This repository contains the code for the paper:
 
 > Yohan Chandrasukmana, Helena Margaretha, Kie Van Ivanky Saputra,
 > **The Hadamard-PINN for PDE inverse problems: Convergence with distant
@@ -11,28 +11,29 @@ This is the code accompanying the published paper:
 > [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S2666657X25000023) ·
 > [doi:10.1016/j.exco.2025.100175](https://doi.org/10.1016/j.exco.2025.100175)
 
-H-PINN (Hadamard-PINN) applies Hadamard's conditions for well-posed problems to the PDE
-inverse problem: training is split into two phases — first the network is
-fitted to the observed data alone, then the PDE parameters λ are searched
-while the fitted solution is held as the anchor. This makes parameter
-identification converge even from initial guesses far from the true values.
-The method is implemented in `Hadamard_IdentificationNet` /
-`Hadamard_IdentificationSolver` in `src/hpinn/pinn_pde_solver.py`, alongside
-the standard PINN forward solver and joint inverse solver.
+H-PINN (Hadamard-PINN) applies Hadamard's conditions for well-posed problems
+to the PDE inverse problem. Training runs in two phases. First the network is
+fitted to the observed data alone. Then the PDE parameters λ are searched
+while the fitted solution is held as the anchor. With this split, parameter
+identification converges even when the initial guesses are far from the true
+values.
 
-Supported problems:
+The method is in `Hadamard_IdentificationNet` and
+`Hadamard_IdentificationSolver` in `src/hpinn/pinn_pde_solver.py`, next to the
+standard PINN forward solver and the joint inverse solver.
+
+Two problems are implemented:
 
 | Problem | PDE residual | Domain | True λ |
 |---|---|---|---|
 | Heat equation | `u_t + λ u_xx` | t ∈ [0, 10], x ∈ [0, 6] | λ = −1 |
 | KdV equation (soliton) | `u_t + λ₁ u u_x + λ₂ u_xxx` | t ∈ [−1, 1], x ∈ [−10, 10] | λ = [−6, 1] |
 
-Both support two modes:
-
-- **Forward** — learn u(t, x) from the physics residual plus initial and
-  boundary conditions.
-- **Inverse** — given (optionally noisy) measurements of u, identify the
-  unknown PDE coefficients λ while fitting the solution.
+Each one runs in two modes. 
+1. In **forward mode**, the network learns u(t, x) from the physics 
+residual plus the initial and boundary conditions.
+2. In **inverse mode**, it takes measurements of u (optionally noisy) 
+and identifies the unknown PDE coefficients λ while fitting the solution.
 
 ## Project structure
 
@@ -40,17 +41,19 @@ Both support two modes:
 ├── src/hpinn/            Core library
 │   ├── pinn_pde_solver.py   PINN models & solvers (TF/Keras 2 API)
 │   ├── problems.py          Heat & KdV problem definitions
-│   └── combined_decay.py    CombinedDecay learning-rate schedule
-└── notebooks/            Colab notebooks — proof-of-concept
+│   └── schedulers/          CombinedDecay learning-rate schedule
+├── notebooks/            Colab notebooks — proof-of-concept
+└── playground/           Interactive web demo (see playground/README.md)
 ```
 
 
 ## Installation
 
-Python 3.10+.
+Requires Python 3.10+.
 
-**As a library** — install straight from GitHub and `import hpinn` in your
-own projects:
+### As a library
+
+Install from GitHub, then `import hpinn` in your own projects:
 
 ```bash
 pip install "git+https://github.com/yoance/HPINN.git"
@@ -60,6 +63,22 @@ pip install "git+https://github.com/yoance/HPINN.git"
 import hpinn
 print(hpinn.__version__)
 ```
+
+### For development
+
+The repository is managed with [uv](https://docs.astral.sh/uv/). Clone it and
+sync the environment. uv takes the Python version from `.python-version` and
+the pinned dependencies from `uv.lock`:
+
+```bash
+git clone https://github.com/yoance/HPINN.git
+cd HPINN
+uv sync
+```
+
+Add `--extra notebooks` to install the Jupyter notebook dependencies. The web
+playground has its own dependency group and setup; see
+[`playground/README.md`](playground/README.md).
 
 
 ## Citation
@@ -80,8 +99,8 @@ If you use this code or the H-PINN method in your research, please cite:
 
 ## Note on TensorFlow versions
 
-The solvers use the Keras 2 API. On TensorFlow ≥ 2.16 (which ships Keras 3)
-the code transparently falls back to the official
-[`tf-keras`](https://pypi.org/project/tf-keras/) package via
-`TF_USE_LEGACY_KERAS=1`, which is set automatically when `hpinn` is imported
-before TensorFlow.
+The solvers use the Keras 2 API. TensorFlow 2.16 and later ship Keras 3, so on
+those versions the code falls back to the official
+[`tf-keras`](https://pypi.org/project/tf-keras/) package by setting
+`TF_USE_LEGACY_KERAS=1`. `hpinn` sets this variable automatically as long as
+you import it before TensorFlow.
