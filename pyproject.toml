@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "hpinn"
 version = "0.1.0"
-description = "Hadamard Physics-Informed Neural Networks for solving PDEs (heat, KdV) with a FastAPI backend and web demo"
+description = "Hadamard Physics-Informed Neural Networks for solving PDEs (heat, KdV)"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
@@ -17,14 +17,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-backend = [
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.29",
-]
 notebooks = [
     "jupyter",
     "pandas",
     "tabulate",
+]
+
+[dependency-groups]
+playground = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.29",
 ]
 
 [tool.setuptools.packages.find]

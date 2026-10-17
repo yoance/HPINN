@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>H-PINN — Physics-Informed Neural Network Playground</title>
+<link rel="stylesheet" href="style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#x1F30A;</text></svg>">
+</head>
+<body>
+<header class="topbar">
+  <div>
+    <h1>H-PINN Playground</h1>
+    <p class="subtitle">Train Physics-Informed Neural Networks on PDEs — forward solving and inverse parameter identification with PINN and Hadamard-PINN</p>
+  </div>
+  <a class="doc-link" href="/docs" target="_blank" rel="noopener">API docs ↗</a>
+</header>
+
+<main class="layout">
+  <aside class="panel controls">
+    <form id="train-form" novalidate>
+      <h2>Problem</h2>
+      <label>Equation
+        <select id="problem" name="problem"></select>
+      </label>
+      <p id="problem-desc" class="hint"></p>
+      <label>Mode
+        <select id="mode" name="mode">
+          <option value="forward">Forward — solve the PDE</option>
+          <option value="inverse">Inverse — identify parameters λ</option>
+        </select>
+      </label>
+
+      <div id="inverse-fields" hidden>
+        <h2>Model</h2>
+        <label id="method-field">Method
+          <select id="method" name="method">
+            <option value="pinn">PINN — fit u and λ jointly</option>
+            <option value="hpinn">H-PINN — Hadamard, two phases</option>
+          </select>
+        </label>
+        <p class="hint" id="method-hint"></p>
+        <div class="row2">
+          <label>Measurement pts
+            <input type="number" id="n_data" value="500" min="50" max="5000">
+          </label>
+          <label>Noise σ
+            <input type="number" id="noise" value="0" min="0" max="1" step="any">
+          </label>
+        </div>
+        <div id="lambda-inputs" class="row2"></div>
+      </div>
+
+      <h2>Network</h2>
+      <div class="row2">
+        <label>Hidden layers
+          <input type="number" id="num_hidden_layers" value="2" min="1" max="8">
+        </label>
+        <label>Neurons / layer
+          <input type="number" id="num_neurons_per_layer" value="20" min="5" max="100">
+        </label>
+      </div>
+
+      <h2>Training</h2>
+      <div class="row2">
+        <label><span id="epochs-label">Epochs</span>
+          <input type="number" id="epochs" value="2000" min="10" max="20000" step="10">
+        </label>
+        <label id="param-epochs-field" hidden>λ-search epochs
+          <input type="number" id="param_epochs" value="1000" min="10" max="20000" step="10">
+        </label>
+      </div>
+      <div class="row2">
+        <label>Seed
+          <input type="number" id="seed" value="0" min="0">
+        </label>
+        <label>Collocation pts
+          <input type="number" id="n_collocation" value="1000" min="100" max="20000" step="50">
+        </label>
+      </div>
+      <div id="forward-fields" class="row2">
+        <label>Initial-cond. pts
+          <input type="number" id="n_initial" value="50" min="10" max="2000">
+        </label>
+        <label>Boundary pts
+          <input type="number" id="n_boundary" value="50" min="10" max="2000">
+        </label>
+      </div>
+
+      <h2>Learning rate</h2>
+      <label id="lr-schedule-field">Scheduler
+        <select id="lr_schedule" name="lr_schedule">
+          <option value="constant">Constant</option>
+          <option value="exponential" selected>Exponential decay</option>
+          <option value="combined">CombinedDecay — exponential, then piecewise</option>
+        </select>
+      </label>
+      <div class="row2">
+        <label>Initial rate
+          <input type="number" id="learning_rate" value="0.01" min="0.00001" max="1" step="any">
+        </label>
+        <label class="decay-field">Decay steps
+          <input type="number" id="decay_steps" value="1000" min="1" max="100000">
+        </label>
+      </div>
+      <div class="row2">
+        <label class="decay-field">Decay rate
+          <input type="number" id="decay_rate" value="0.9" min="0.01" max="1" step="any">
+        </label>
+        <label class="combined-field">Divide by
+          <input type="number" id="values_steps" value="2" min="1" max="100" step="any">
+        </label>
+      </div>
+      <label class="combined-field">Boundaries (steps)
+        <input type="text" id="boundaries" value="1000, 1500" inputmode="numeric" spellcheck="false">
+      </label>
+      <button type="button" id="preset-btn" class="link-btn combined-field">Use the notebooks' CombinedDecay settings</button>
+      <p class="hint" id="lr-hint"></p>
+      <div class="lr-preview">
+        <div class="legend" id="lr-legend"></div>
+        <svg id="lr-chart" aria-label="Learning-rate schedule preview"></svg>
+      </div>
+
+      <h2>Run</h2>
+      <label>Compare
+        <select id="compare" name="compare">
+          <option value="none">Single run</option>
+          <option value="models">PINN vs H-PINN</option>
+          <option value="schedulers">Constant vs exponential vs CombinedDecay</option>
+        </select>
+      </label>
+      <p class="hint" id="compare-hint"></p>
+      <p class="form-error" id="form-error" hidden></p>
+
+      <div class="actions">
+        <button type="submit" id="train-btn" class="primary">Train model</button>
+        <button type="button" id="cancel-btn" hidden>Cancel</button>
+      </div>
+    </form>
+  </aside>
+
+  <section class="results">
+    <div class="panel status-card" id="status-card" hidden>
+      <div id="runs-status"></div>
+    </div>
+
+    <div id="summary" hidden></div>
+
+    <div class="panel chart-card" id="loss-card" hidden>
+      <h3>Training loss <span class="chart-sub">(log scale)</span></h3>
+      <div class="legend" id="loss-legend"></div>
+      <div class="chart-wrap"><svg id="loss-chart"></svg></div>
+      <p class="hint" id="loss-hint" hidden>H-PINN minimises the data misfit in phase 1 and the PDE residual in phase 2, so its loss changes meaning at the dashed line.</p>
+    </div>
+
+    <div class="panel chart-card" id="lambda-card" hidden>
+      <h3>Parameter convergence</h3>
+      <div class="legend" id="lambda-legend"></div>
+      <div id="lambda-charts" class="multiples"></div>
+    </div>
+
+    <div class="panel chart-card" id="solution-card" hidden>
+      <div class="card-head">
+        <h3>Solution u(t, x)</h3>
+        <div class="segmented" id="solution-runs" role="tablist"></div>
+      </div>
+      <div class="heatmaps">
+        <figure>
+          <figcaption id="hm-pred-caption">Prediction</figcaption>
+          <canvas id="hm-pred"></canvas>
+        </figure>
+        <figure>
+          <figcaption>Exact solution</figcaption>
+          <canvas id="hm-exact"></canvas>
+        </figure>
+        <figure>
+          <figcaption>Absolute error</figcaption>
+          <canvas id="hm-error"></canvas>
+        </figure>
+      </div>
+      <div class="colorbars">
+        <div class="colorbar"><span id="cb-u-min"></span><canvas id="cb-u" width="160" height="10"></canvas><span id="cb-u-max"></span><span class="cb-label">u</span></div>
+        <div class="colorbar"><span id="cb-e-min"></span><canvas id="cb-e" width="160" height="10"></canvas><span id="cb-e-max"></span><span class="cb-label">|error|</span></div>
+      </div>
+      <p class="hint">Horizontal axis: time t · vertical axis: space x. Hover for values. Colour scales are shared across runs.</p>
+    </div>
+
+    <div class="panel empty-state" id="empty-state">
+      <p>Pick an equation and press <strong>Train model</strong>.</p>
+      <p class="hint">Forward mode learns u(t,x) from physics + initial/boundary conditions.
+      Inverse mode is given noisy measurements of u and identifies the unknown PDE
+      coefficients λ — either jointly (PINN) or with the two-phase Hadamard-PINN, which
+      first fits the data and then searches λ with the fitted network held fixed.
+      Compare runs side by side and try out the learning-rate schedulers.
+      Training runs live on the server — the curves stream in as it learns.</p>
+    </div>
+  </section>
+</main>
+
+<div id="tooltip" class="tooltip" hidden></div>
+<script src="app.js"></script>
+</body>
+</html>
