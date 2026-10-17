@@ -1,11 +1,11 @@
 # H-PINN Playground
 
-An interactive web demo for the `hpinn` library: train PINNs on the heat and
-KdV equations from the browser and watch the loss, the identified PDE
-parameters λ and the predicted solution u(t, x) as training runs.
+An interactive web demo for the `hpinn` library. You train PINNs on the heat
+and KdV equations from the browser and watch the loss, the identified PDE
+parameters λ and the predicted solution u(t, x) update as training runs.
 
 The playground imports the solvers and problem definitions from
-[`src/hpinn`](../src/hpinn) — it holds no PDE or model code of its own.
+[`src/hpinn`](../src/hpinn) and has no PDE or model code of its own.
 
 ## Structure
 
@@ -60,20 +60,21 @@ Set with `lr_schedule`, starting from `learning_rate`:
 | `combined` | `hpinn.CombinedDecay`: exponential decay until `boundaries[0]`, then the rate is divided by `values_steps` at every boundary. | `decay_steps`, `decay_rate`, `boundaries`, `values_steps` |
 
 Each optimizer runs its own schedule, so with H-PINN the schedule restarts
-at the start of the λ-search phase. The UI previews the schedule as you edit
-it, and can load the settings used in the notebooks.
+when the λ-search phase begins. The UI previews the schedule as you edit it.
+It can also load the settings used in the notebooks.
 
 ## Comparing runs
 
 The UI's **Compare** option trains several jobs on the same data, seed and
-initial λ, then shows them together: a comparison table, overlaid loss and λ
-curves, and solution heatmaps on shared colour scales.
+initial λ. The results appear side by side in a comparison table, with
+overlaid loss and λ curves and solution heatmaps on shared colour scales.
+Two presets are built in:
 
-- **PINN vs H-PINN** (inverse mode): one run per method.
-- **Constant vs exponential vs CombinedDecay**: one run per scheduler.
+1. **PINN vs H-PINN** (inverse mode): one run per method.
+2. **Constant vs exponential vs CombinedDecay**: one run per scheduler.
 
-Each run is an ordinary job (`POST /api/train`), so you can compare
-anything else the same way through the API.
+Each run is an ordinary job (`POST /api/train`), so you can set up any other
+comparison yourself through the API.
 
 ## API
 
