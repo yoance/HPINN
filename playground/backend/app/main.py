@@ -39,11 +39,18 @@ MAX_HISTORY_POINTS = 400
 
 def _decimate_indices(n, max_points=MAX_HISTORY_POINTS):
     """Indices that downsample a history of length ``n`` for transport,
-    always keeping the last point."""
-    if n <= max_points:
-        return list(range(n))
-    step = n / max_points
-    idx = [int(i * step) for i in range(max_points)]
+    always keeping the last point.
+
+    The stride is a power of two, so the sampled indices stay fixed as the
+    history grows (only thinning out when the stride doubles). A stride of
+    ``n / max_points`` would resample already-finished parts of the curve on
+    every poll and make them jitter."""
+    if n == 0:
+        return []
+    stride = 1
+    while -(-n // stride) > max_points:
+        stride *= 2
+    idx = list(range(0, n, stride))
     if idx[-1] != n - 1:
         idx.append(n - 1)
     return idx
